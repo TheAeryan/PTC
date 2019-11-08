@@ -6,13 +6,27 @@ import numpy as np
 from html.parser import HTMLParser
 import locale
 import matplotlib.pyplot as plt
+from matplotlib.legend import Legend
+from matplotlib.lines import Line2D
 
 # Establecer la configuración que tenga el entorno del usuario
 locale.setlocale(locale.LC_ALL,'')
 
+# Directorio donde se almacenarán los resultados
+path_resultados = 'resultados/'
+
+# Función que implementa el redondeo de reales de forma correcta
+def redondear(numero, decimales):
+    numero=numero*(10**decimales)
+    numero=numero + 0.5
+    numero=(int)(numero)
+    numero=numero/(10**decimales)
+    
+    return numero
+
 # Clase de ayuda para parsear los ficheros html
 class MyHTMLParser(HTMLParser):
-
+    
     def __init__(self):
         super().__init__()
         self.values = [] # Values debe ser una variable de instancia y no de clase!! (Si no, se comparterá entre las distintas instancias de la clase)
@@ -36,7 +50,7 @@ class MyHTMLParser(HTMLParser):
 # desagregados por sexos
 def cargar_datos_poblacion_provincias(cargar_datos_sexos=False):
     # Cargo el archivo csv codificado como 'latin-1' con los datos de la población
-    with open('poblacionProvinciasHM2010-17.csv', encoding='latin-1', newline='') as file:
+    with open('poblacionProvinciasHM2010-17.csv', encoding='ISO-8859-1', newline='') as file:
         # Leo las líneas del archivo
         lines = file.readlines()
         lines = lines[6:-4] # Elimino las líneas del archivo del principio y final que no se corresponden con datos de población
@@ -98,12 +112,27 @@ def calcular_variacion_relativa(datos_poblacion, datos_variacion_abs):
         
     return datos_variacion_rel
 
+# Función que crea la hoja de estilo que van a usar todas las tablas de la
+# práctica
+def crear_hoja_estilo_tablas(path_css):
+    fileEstilo=open(path_css,"w", encoding="utf8")
+
+    estilo="""  table, th, td {
+                    border-collapse: collapse;    
+                    border:1px solid black;
+                    font-family: Arial, Helvetica, sans-serif;
+                    padding: 8px;     
+                }  """
+    
+    fileEstilo.write(estilo)
+    fileEstilo.close()
+
 # Función que devuelve el fragmento de código html asociado a una tabla
 # tit_col_1 -> Títulos de las columnas que aparecen en la cabecera de la tabla
 # colspans_tit_1 -> Colspans de cada uno de los títulos de tit_col_1
 # tit_col_2 -> Títulos de las columnas que aparecen debajo de tit_col_1. Su colspan es de 1.
 # datos_filas -> Matriz con los datos de las filas a añadir. Sus elementos son strings.
-def crear_codigo_html_tabla(tit_col_1, colspans_tit_1, tit_col_2, datos_filas):
+def crear_codigo_html_tabla(tit_col_1, colspans_tit_1, tit_col_2, datos_filas, path_csv=None):
     cod_html = "<p><table>"
     
     # Añado la cabecera de la tabla correspondiente a tit_col_1
@@ -146,12 +175,17 @@ datos_variacion_rel = calcular_variacion_relativa(datos_poblacion, datos_variaci
     
 # Creo la web
 
+# Creo la hoja de estilos
+nombre_css = "estilo.css"
+crear_hoja_estilo_tablas(path_resultados + nombre_css)
+
 # Añado el encabezado y títulos
 pagina_variacion = """<!DOCTYPE html><html>
 <head><title>Web 1</title>
+<link rel="stylesheet" href={}>
 <meta charset="utf8"></head>
 <body><h1>Resumen por provincias</h1>
-<h2>Variación anual en la población por provincias</h2>"""
+<h2>Variación anual en la población por provincias</h2>""".format(nombre_css)
 
 # Obtengo la información para rellenar la tabla
 
@@ -174,7 +208,7 @@ for (comunidad, var_abs), (_, var_rel) in zip(datos_variacion_abs.items(), datos
                            var_abs.tolist()))
     
     # Formateo las variaciones relativas para que tengan 2 decimales y tengan el punto de los miles
-    nueva_fila += list(map(lambda num: locale.format_string('%.2f', num, grouping=True),
+    nueva_fila += list(map(lambda num: locale.format_string('%.2f', redondear(num, 2), grouping=True),
                            var_rel.tolist()))
     
     # La añado a la matriz
@@ -184,8 +218,11 @@ for (comunidad, var_abs), (_, var_rel) in zip(datos_variacion_abs.items(), datos
 fragmento_tabla = crear_codigo_html_tabla(tit_col_1, colspans_tit_1, tit_col_2, mat_filas)
 pagina_variacion += fragmento_tabla
 
+# Añado las etiquetas de cierre para marcar el final del código html
+pagina_variacion+="</body></html>"
+
 # Guardo los datos en el archivo variacionProvincias.htm
-with open('variacionProvincias.htm', 'w', encoding='utf8') as file:
+with open(path_resultados + 'variacionProvincias.htm', 'w', encoding='utf8') as file:
     file.write(pagina_variacion)
 
 
@@ -201,7 +238,7 @@ with open('variacionProvincias.htm', 'w', encoding='utf8') as file:
 # de la tabla del fichero entre 'puntoInicio' y 'puntoFin'
 def cargar_datos_tabla_html(path, puntoInicio='<td>01', puntoFin='</tbody>'):
     # Leo el archivo, usando la codificación latin-1
-    comunidadesFich=open(path, 'r', encoding="latin-1")
+    comunidadesFich=open(path, 'r', encoding="ISO-8859-1")
     
     comString=comunidadesFich.read()
     
@@ -275,9 +312,10 @@ for cod_prov in datos_pob_provincias:
 # Añado el encabezado y títulos
 pagina_comunidades = """<!DOCTYPE html><html>
 <head><title>Web 2</title>
+<link rel="stylesheet" href={}>
 <meta charset="utf8"></head>
 <body><h1>Resumen por comunidades autónomas</h1>
-<h2>Valores de población en comunidades autónomas</h2>"""
+<h2>Valores de población en comunidades autónomas</h2>""".format(nombre_css)
 
 # Obtengo la información para rellenar la tabla
 
@@ -306,8 +344,11 @@ for key, val in dict_pob_comunidades.items():
 fragmento_tabla = crear_codigo_html_tabla(tit_col_1, colspans_tit_1, tit_col_2, mat_filas)
 pagina_comunidades += fragmento_tabla
 
+# Añado las etiquetas de cierre para marcar el final del código html
+pagina_comunidades+="</body></html>"
+
 # Guardo los datos en el archivo variacionProvincias.htm
-with open('poblacionComAutonomas.htm', 'w', encoding='utf8') as file:
+with open(path_resultados + 'poblacionComAutonomas.htm', 'w', encoding='utf8') as file:
     file.write(pagina_comunidades)
 
 
@@ -318,21 +359,21 @@ with open('poblacionComAutonomas.htm', 'w', encoding='utf8') as file:
 num_com_max = 10 # Número de comunidades (con más habitantes) de las que realizar el gráfico 
     
 # Función que crea el gráfico de barras con las autonomías y lo guarda como imagen
-def crear_grafico_barras_auto(list_nom_auto, list_pob_hombre, list_pob_mujer, path_salida='grafico_ej_3.png', width=0.35):    
-    x = np.arange(len(list_nom_auto))  # La localización de las etiquetas (nombres de las comunidades)
+def crear_grafico_barras_auto(list_cod_auto, list_pob_hombre, list_pob_mujer, path_salida='grafico_ej_3.png', width=0.35):    
+    x = np.arange(len(list_cod_auto))  # La localización de las etiquetas (nombres de las comunidades)
     
     fig, ax = plt.subplots()
     # Pinto las barras de los hombres a la izquierda de las mujeres, estando
     # el centro de cada pareja de barras dado por x
-    barras_hombre = ax.bar(x - width/2, list_pob_hombre, width, label='Hombre')
-    barras_mujer = ax.bar(x + width/2, list_pob_mujer, width, label='Mujer')
+    ax.bar(x - width/2, list_pob_hombre, width, label='Hombre')
+    ax.bar(x + width/2, list_pob_mujer, width, label='Mujer')
     
     # Añado las etiquetas
     ax.set_ylabel('Población (2017)') # Etiqueta eje y
     ax.set_title('Población en 2017 de las comunidades más pobladas') # Título del gráfico
     ax.set_xticks(x)           # Escribo los nombres de la comunidad
-    ax.set_xticklabels(list_nom_auto) #  correspondiente en cada pareja de barras
-    ax.legend() # Pinto la leyenda
+    ax.set_xticklabels(list_cod_auto) #  correspondiente en cada pareja de barras
+    ax.legend() # Pinto la leyenda hombre-mujer
     
     """
     def autolabel(rects):
@@ -365,24 +406,23 @@ lista_ord_pob_media_com = sorted(dict_pob_media_comunidades.items(),
 dict_com_mas_pobladas = dict(lista_ord_pob_media_com[:num_com_max])
 
 # Obtengo los datos del gráfico para cada comunidad
-list_nombres_auto = []
+list_cods_auto = []
 list_pob_hombre_auto = []
 list_pob_mujer_auto = []
 
 for cod_auto in dict_com_mas_pobladas:
     # Obtengo los datos de cada comunidad y los añado a las listas
-    nombre_auto = dict_cod_nom_comunidades[cod_auto]
     pob_hombre_auto = dict_pob_comunidades[cod_auto][8] # Población de hombres en el año 2017
     pob_mujer_auto = dict_pob_comunidades[cod_auto][16] # Población de mujeres en el año 2017
     
-    list_nombres_auto.append(nombre_auto)
+    list_cods_auto.append(cod_auto)
     list_pob_hombre_auto.append(pob_hombre_auto)
     list_pob_mujer_auto.append(pob_mujer_auto)
   
 # Creo la gráfica
 path_imagen = 'grafico_ej_3.png'
     
-crear_grafico_barras_auto(list_nombres_auto, list_pob_hombre_auto, list_pob_mujer_auto, path_imagen)
+crear_grafico_barras_auto(list_cods_auto, list_pob_hombre_auto, list_pob_mujer_auto, path_resultados + path_imagen)
 
 # Añado la gráfica a la web del ejercicio 2
 
@@ -391,8 +431,23 @@ cod_html_imagen = "<h2>Población en 2017 de las comunidades más pobladas</h2> 
 <img src={} alt=Gráfico Barras>".format(path_imagen)
 
 # Añado este fragmento a la web
-with open('poblacionComAutonomas.htm', 'a') as f:
-    f.write(cod_html_imagen)
+
+# Cargo los contenidos de la web
+pag_entera = ""
+with open(path_resultados + 'poblacionComAutonomas.htm', 'r', encoding='utf8') as f:
+    pag_entera = f.read()
+    
+# Le quito las etiquetas del final (</body></html>)
+pag_entera = pag_entera[:-14]
+
+# Le añado la web
+pag_entera += cod_html_imagen
+
+# Le añado las etiquetas del final
+pag_entera += "</body></html>"
+
+with open(path_resultados + 'poblacionComAutonomas.htm', 'w', encoding='utf8') as f:
+    f.write(pag_entera)
     
 # <Ejercicio 4>
 # Generar una página web 3 (fichero variacionComAutonomas.htm) con una tabla con la
@@ -418,9 +473,10 @@ dict_var_rel_mujer = calcular_variacion_relativa(dict_pob_com_mujer, dict_var_ab
 # Añado el encabezado y títulos
 pagina_var_com = """<!DOCTYPE html><html>
 <head><title>Web 3</title>
+<link rel="stylesheet" href={}>
 <meta charset="utf8"></head>
 <body><h1>Resumen por comunidades autónomas</h1>
-<h2>Variación de la población en comunidades autónomas</h2>"""
+<h2>Variación de la población en comunidades autónomas</h2>""".format(nombre_css)
 
 # Obtengo la información para rellenar la tabla
 
@@ -447,7 +503,7 @@ zip(dict_var_abs_hombre.items(), dict_var_rel_hombre.items(), dict_var_abs_mujer
                            var_abs_hombre.tolist()))
     
     # Formateo las variaciones relativas para que tengan 2 decimales y tengan el punto de los miles
-    nueva_fila += list(map(lambda num: locale.format_string('%.2f', num, grouping=True),
+    nueva_fila += list(map(lambda num: locale.format_string('%.2f', redondear(num, 2), grouping=True),
                            var_rel_hombre.tolist()))
     
     # Variación mujeres
@@ -457,7 +513,7 @@ zip(dict_var_abs_hombre.items(), dict_var_rel_hombre.items(), dict_var_abs_mujer
                            var_abs_mujer.tolist()))
     
     # Formateo las variaciones relativas para que tengan 2 decimales y tengan el punto de los miles
-    nueva_fila += list(map(lambda num: locale.format_string('%.2f', num, grouping=True),
+    nueva_fila += list(map(lambda num: locale.format_string('%.2f', redondear(num, 2), grouping=True),
                            var_rel_mujer.tolist()))
     
     # La añado a la matriz
@@ -467,26 +523,43 @@ zip(dict_var_abs_hombre.items(), dict_var_rel_hombre.items(), dict_var_abs_mujer
 fragmento_tabla = crear_codigo_html_tabla(tit_col_1, colspans_tit_1, tit_col_2, mat_filas)
 pagina_var_com += fragmento_tabla
 
+# Añado las etiquetas de cierre
+pagina_var_com += "</body></html>"
+
 # Guardo los datos en el archivo variacionComAutonomas.htm
-with open('variacionComAutonomas.htm', 'w', encoding='utf8') as file:
+with open(path_resultados + 'variacionComAutonomas.htm', 'w', encoding='utf8') as file:
     file.write(pagina_var_com)
 
 # <Ejercicio 5>
+# Usando Matplotlib, para las 10 comunidades elegidas en el punto R3 generar un gráfico de líneas
+# que refleje la evolución de la población total de cada comunidad autónoma desde el año 2010 a 2017,
+# salvar el gráfico a fichero e incorporarlo a la página web 3 del punto R4.
+
+# Función que recibe un diccionario con los códigos de las comunidades y sus poblaciones y
+# genera un gráfico de líneas
+def crear_grafico_lineas_auto(dict_pob_autos):
+    pass
+    
+
+# A partir de dict_com_mas_pobladas, obtengo un diccionario con las claves de las comunidades
+# más pobladas y sus poblaciones
+dict_pob_com_mas_pobladas = {cod_auto: dict_pob_comunidades[cod_auto] for cod_auto in dict_com_mas_pobladas}    
+
+# Creo el gráfico
+crear_grafico_lineas_auto(dict_pob_com_mas_pobladas)
+
 
 
 # PREGUNTAR DUDAS:
-# > CÓMO CREAR LAS PÁGINAS WEBS (QUÉ TIPO DE PARSER Y MÓDULOS USAR). ¿HE CREADO?
-# BIEN LA TABLA O HAY QUE AÑADIR MÁS INFORMACIÓN O CSS A LA WEB?
-# He usado bien el tipo de dato diccionario o también debería guardar la población
-# de una provincia como un diccionario donde las claves son el año (2017-2011)?
 # He cargado bien los datos? (he hecho bien lo de eliminar las filas de delante y
 # atrás, así como las columnas del final?)
 # > Preguntar si he pintado bien el gráfico de barras del ej. 3 y qué hacer con
-# los nombres de las comunidades que se solapan
-# > VER SI DEBERÍA CREAR MÁS FUNCIONES O PARAMETRIZAR MÁS PARA QUE EL CÓDIGO SEA MÁS
-# REUTILIZABLE
-        
-    
+# los nombres de las comunidades que se solapan. Poner códigos y una leyenda con los códigos y los nombres.
+
+# ~ Para comprobar la generalidad de la solución: al darle el fichero comunidadesAutonomasBis.htm
+# (que tiene menos comunidades autónomas) todo debería funcionar a la primera (solo me debería dar
+# la información de esas comunidades autónomas). Con que eso funcione, se considerará que la
+# solución es general!!!
     
     
     
