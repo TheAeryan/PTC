@@ -12,8 +12,8 @@ from matplotlib import rcParams
 # guardada a disco. Si no se usa, la leyenda aparece recortada en la imagen
 rcParams.update({'figure.autolayout': True})
 
-# Establecer la configuración que tenga el entorno del usuario
-locale.setlocale(locale.LC_ALL,'')
+# Establecer configuración para España en Ubuntu
+locale.setlocale(locale.LC_ALL, 'es_ES.utf8')  
 
 # Directorio donde se almacenarán los resultados
 path_resultados = 'resultados/'
@@ -279,7 +279,8 @@ def cargar_datos_tabla_html(path, puntoInicio='<td>01', puntoFin='</tbody>'):
 # Función que implementa el ejercicio 2
 # fich_comunidades es el path del fichero desde donde leer los datos las comunidades autónomas
 # file_web_2 es el path del fichero htm de la web 2
-def ejercicio_2(fich_comunidades='comunidadesAutonomas.htm', file_web_2='poblacionComAutonomas.htm'):
+# nom_web_2 es el título del fichero htm de la web 2
+def ejercicio_2(fich_comunidades='comunidadesAutonomas.htm', file_web_2='poblacionComAutonomas.htm', nom_web_2='Web 2'):
     # Cargo los datos de la población, tanto totales como desagregados por sexos
     datos_pob_provincias = cargar_datos_poblacion_provincias(cargar_datos_sexos=True)
     del datos_pob_provincias['Total Nacional'] # Elimino los datos totales, ya que solo me interesan los de las provincias
@@ -323,19 +324,21 @@ def ejercicio_2(fich_comunidades='comunidadesAutonomas.htm', file_web_2='poblaci
         cod_comunidad_prov = codigos_prov_y_com[cod_prov]
         
         # Le sumo el vector de poblaciones de la provincia al vector de poblaciones
-        # de la comunidad a la que pertenece    
-        dict_pob_comunidades[cod_comunidad_prov] = \
-        dict_pob_comunidades[cod_comunidad_prov] + datos_pob_provincias[cod_prov]
+        # de la comunidad a la que pertenece, en el caso de que esa comunidad
+        # esté en dict_pob_comunidades
+        if cod_comunidad_prov in dict_pob_comunidades:
+            dict_pob_comunidades[cod_comunidad_prov] = \
+            dict_pob_comunidades[cod_comunidad_prov] + datos_pob_provincias[cod_prov]
             
     # Creo la web
         
     # Añado el encabezado y títulos
     pagina_comunidades = """<!DOCTYPE html><html>
-    <head><title>Web 2</title>
+    <head><title>{}</title>
     <link rel="stylesheet" href={}>
     <meta charset="utf8"></head>
     <body><h1>Resumen por comunidades autónomas</h1>
-    <h2>Valores de población en comunidades autónomas</h2>""".format(nombre_css)
+    <h2>Valores de población en comunidades autónomas</h2>""".format(nom_web_2, nombre_css)
     
     # Obtengo la información para rellenar la tabla
     
@@ -484,7 +487,8 @@ def ejercicio_3(file_web_2='poblacionComAutonomas.htm', file_im_web_2='grafico_w
 
 # Función que implementa el ejercicio 4
 # file_web_3 es el path del fichero htm de la web 3
-def ejercicio_4(file_web_3='variacionComAutonomas.htm'):
+# nom_web_3 es el título del fichero htm de la web 3
+def ejercicio_4(file_web_3='variacionComAutonomas.htm', nom_web_3='Web 3'):
     # Separo los datos de las poblaciones de las com. autónomas por sexos
     dict_pob_com_hombre = {cod_auto: vec_pob[8:16] for cod_auto, vec_pob in dict_pob_comunidades.items()}
     dict_pob_com_mujer = {cod_auto: vec_pob[16:] for cod_auto, vec_pob in dict_pob_comunidades.items()}
@@ -501,11 +505,11 @@ def ejercicio_4(file_web_3='variacionComAutonomas.htm'):
         
     # Añado el encabezado y títulos
     pagina_var_com = """<!DOCTYPE html><html>
-    <head><title>Web 3</title>
+    <head><title>{}</title>
     <link rel="stylesheet" href={}>
     <meta charset="utf8"></head>
     <body><h1>Resumen por comunidades autónomas</h1>
-    <h2>Variación de la población en comunidades autónomas</h2>""".format(nombre_css)
+    <h2>Variación de la población en comunidades autónomas</h2>""".format(nom_web_3, nombre_css)
     
     # Obtengo la información para rellenar la tabla
     
@@ -668,28 +672,22 @@ def ejercicio_6():
     else:
         print("\n> Las variaciones de la web 1 son incorrectas!")
     
-    # <Genero las páginas web 2 y 3 pero con el fichero  comunidadesAutonomasBis.htm>
-    ejercicio_2(fich_comunidades='comunidadesAutonomasBis.htm', file_web_2='poblacionComAutonomasBis.htm')
-    ejercicio_3(file_web_2='poblacionComAutonomasBis.htm')
-    ejercicio_4(file_web_3='variacionComAutonomasBis.htm')
-    ejercicio_5(file_web_3='variacionComAutonomasBis.htm')
+    # <Genero las páginas web 2 y 3 pero con el fichero comunidadesAutonomasBis.htm>
+    ejercicio_2(fich_comunidades='comunidadesAutonomasBis.htm',
+                file_web_2='poblacionComAutonomasBis.htm', nom_web_2="Web 2 Bis")
+    ejercicio_3(file_web_2='poblacionComAutonomasBis.htm', file_im_web_2='grafico_web_2Bis.png')
+    ejercicio_4(file_web_3='variacionComAutonomasBis.htm', nom_web_3="Web 3 Bis")
+    ejercicio_5(file_web_3='variacionComAutonomasBis.htm', file_im_web_3='grafico_web_3Bis.png')
+
 
 # <Ejecuto las funciones de los distintos apartados>
-        
+      
 ejercicio_1()
 ejercicio_2()
 ejercicio_3()
 ejercicio_4()
 ejercicio_5()
 ejercicio_6()
-
-
-# PREGUNTAR DUDAS:
-
-# ~ Para comprobar la generalidad de la solución: al darle el fichero comunidadesAutonomasBis.htm
-# (que tiene menos comunidades autónomas) todo debería funcionar a la primera (solo me debería dar
-# la información de esas comunidades autónomas). Con que eso funcione, se considerará que la
-# solución es general!!!
     
     
     
