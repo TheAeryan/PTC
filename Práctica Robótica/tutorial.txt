@@ -1,0 +1,32 @@
+Parte 4. 
+Apartado 1.
+Los scripts deben estar parametrizados (el número de ciclos de lectura y tiempo de espera).
+Entre cada lectura y otra, cambiamos la posición y orientación de la persona (también poner situaciones en las que solo se le vea una pierna).
+En la memoria hay que ir poniendo la primera y última imagen de cada situación. Estas imágenes son tanto del sensor de visión como 
+capturas de pantalla del simulador.
+Para las situaciones con el cilindro (ejemplos negativos), las dimensiones del cilindro deben ser diferentes a las de las piernas, para
+que el modelo las pueda diferenciar.
+
+Apartado 2.
+Hacer clústeres -> si un clúster tiene muchos puntos, no será de la pierna
+y de la misma forma si tiene demasiados pocos puntos (son parámetros que hay que fijar, igual a la distancia máxima de salto).
+
+NO USAR PAREDEDES!!! (solo poner piernas y cilindros en las escenas)
+
+Calcular width y perimetro de los clústeres -> dist. euclídea
+Depth -> Calcular recta que pasa por el primer y último punto y para cada punto del clúster calcular su distancia a la recta.
+El máximo de estas distancias es la profundidad.
+
+>>>>> caracteristicasPiernas.dat y caracteristicasNoPiernas.dat realmente son json!!!!! (está mal en el PDF)
+
+Ver cómo agrupamos los clústeres cercanos (para que dos clústeres de dos piernas sean de la misma persona).
+
+-------------
+
+El test está pensado de tal forma que el clasificador clasificará correctamente varios ejemplos pero otros (como las paredes), no.
+Una vez que veamos que falla con algunas cosas en el test, tenemos que corregir la práctica para que detecte correctamente todos
+los objetos de la escena de test.
+
+-------------
+
+Hacer apartado opcional.
