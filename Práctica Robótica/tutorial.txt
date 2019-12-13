@@ -1,5 +1,8 @@
 Parte 4. 
 Apartado 1.
+
+USAR EL ENTORNO DE CONDA BASE, QUE TIENE OPENCV INSTALADO CON PIP!!!
+
 Los scripts deben estar parametrizados (el número de ciclos de lectura y tiempo de espera).
 Entre cada lectura y otra, cambiamos la posición y orientación de la persona (también poner situaciones en las que solo se le vea una pierna).
 En la memoria hay que ir poniendo la primera y última imagen de cada situación. Estas imágenes son tanto del sensor de visión como 
@@ -30,3 +33,36 @@ los objetos de la escena de test.
 -------------
 
 Hacer apartado opcional.
+
+-------------
+
+<IMPORTANTE>
+
+Nos va a dar el script entero con el clasificador de scikit-learn.
+En vez de "copiar" el script y usarlo tal cual hay que profundizar en el apartado científico:
+limitaciones de los clasificadores supervisados y cómo podemos superar esas carencias usando
+varias herramientas en Python.
+
+1. Seguimos los pasos del guión (clusterización como dice, clasificador, etc.) y vemos los resultados.
+(usar fichero ejemploSklearnSVM_final)
+2. Cambiamos los pasos seguidos para mejorar los resultados obtenidos. En la escena de test podemos ver cómo
+hay ejemplos muy diferentes de los que hemos usado en entrenamiento, por lo que los resultados obtenidos serán
+malos. Para mejorarlos, tenemos que cambiar las escenas de entrenamiento para que haya objetos parecidos
+a la escena de test, para mejorar los resultados en esta escena. Además, ¿hay que cambiar las clases, el método
+de clusterización, etc.?
+Visualizar los datos para decidir qué hacer (esta parte la tendrá en cuenta si la realizamos).
+
+Para elegir los valores de C y gamma de la SVM con kernel radial hay que usar CV para hacer la gridSearch Y 
+LinearSearch. Ejecutamos ambas búsquedas, obtenemos los valores de C y gamma de cada una y vemos cuál de estas
+2 parejas es mejor, usando el cross_val_score(svcRBF2, X, y, cv=5) (vuelvo a repetir cross-validation pero
+usando tanto el conjunto de entrenamiento como el de test).
+
+---- Parte opcional
+
+Giramos el robot (sin moverlo, se queda siempre en el 0,0) y vamos escaneando los objetos, clasificándolos y mostrando
+los resultados en una tabla html.
+
+1. El robot (sin girar) lanza el láser y detecta todos los objetos de la escena (coge la nube de puntos). Le aplicamos
+todo el proceso (clusterización y clasificación pierna o no pierna).
+2. Como sé el centro (x, y) de cada objeto, voy girando el robot para que mire a cada objeto y voy sacándole una foto
+(no lo vuelvo a clasificar, solo giro el robot para ir sacando las fotos).

@@ -148,6 +148,7 @@ while(iteracion<maxIter and seguir):
     #Mostrar frame y salir con "ESC"
     cv2.imshow('Image', img)
     cv2.imshow('Mask', mask)
+
     
     tecla = cv2.waitKey(5) & 0xFF
     if tecla == 27:
