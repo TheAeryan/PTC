@@ -165,7 +165,7 @@ if __name__ == '__main__':
         
         # Guardo en disco la imagen si es la primera o última iteración
         if iteracion == 0 or iteracion == num_ciclos-1:
-            cv2.imwrite('Iteracion'+str(iteracion)+'.jpg', img)
+            cv2.imwrite(nom_fich+str(iteracion)+'.jpg', img)
     
         
         tecla = cv2.waitKey(5) & 0xFF
