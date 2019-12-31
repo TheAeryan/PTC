@@ -18,7 +18,7 @@ import sys
 # mostramos el directorio de trabajo y leemeos los datos del primero
 print("Directorio de trabajo es: ", os.getcwd())
 
-listaDir=sorted(glob.glob("dirLectura*"))
+listaDir=sorted(glob.glob("positivo*"))
 numDirLecturas=len(listaDir)
 
 if(numDirLecturas>0):
@@ -33,7 +33,7 @@ print("Cambiando el directorio de trabajo a: ", os.getcwd())
 
 objetos=[]
 
-with open('datosLaser.json', 'r') as f:
+with open('enPieCerca.json', 'r') as f:
      for line in f:
         objetos.append(json.loads(line))
 
