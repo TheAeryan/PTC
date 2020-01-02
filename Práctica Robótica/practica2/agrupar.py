@@ -3,15 +3,21 @@
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors # Lista de colores de matplotlib
 import json
 import os
 import glob
 import math
 
 # Parámetros fijados con la experimentación para obtener buenos clusters
-min_puntos_cluster=1
-max_puntos_cluster=20
-umbral_distancia = 0.1
+# Los valores obtenidos de estos parámetros me proporcionan buenos clusters
+# para todos los casos menos para los de cilindroMenorLejos (ya que tienen
+# pocos puntos)
+min_puntos_cluster=3  # Valor pequeño debido a que de los cilindros pequeños se obtienen pocos datos
+                      # No puedo aumentar más el valor o no obtengo ningún clúster de cilindroMenorLejos
+max_puntos_cluster=50 # Valor grande debido a que los datos de los cilindros grandes cerca tienen muchos puntos
+umbral_distancia = 0.04 # Valor que hace que los puntos del mismo objeto estén en el mismo cluster pero que los de
+                        # objetos diferentes estén en distintos clusters
 
 distancias = ['Cerca', 'Medio', 'Lejos']
 
@@ -35,6 +41,31 @@ def leer_datos_json(nom_fichero):
     puntos = [[obj['PuntosX'], obj['PuntosY']] for obj in objetos[1:-1]]
     
     return puntos
+
+def leer_ejemplos_carpetas(nombre_carpetas):
+    """
+    Lee los datos de los ficheros JSON en el interior de todas las carpetas
+    de nombre_carpetas.
+    """
+    datos = []
+    
+    listaDir=sorted(glob.glob(nombre_carpetas)) # Carpetas con los ejemplos
+    
+    for carpeta in listaDir:
+        os.chdir(carpeta) # Cambio el directorio de trabajo a la carpeta
+        
+        # Obtengo el nombre del archivo json con los datos
+        nom_archivo = glob.glob('*.json')[0]
+        
+        # Leo los datos del archivo
+        datos_archivo = leer_datos_json(nom_archivo)
+        
+        # Los añado a los datos positivos
+        datos += datos_archivo
+        
+        os.chdir('..') # Vuelvo al antiguo directorio de trabajo
+    
+    return datos
 
 def dist(x1, y1, x2, y2):
     """
@@ -86,51 +117,84 @@ def crear_clusters(datos):
                 
     return clusters
 
+def visualizar_clusters(datos):
+    """
+    Función auxiliar que uso para visualizar los clusters creados y así
+    elegir los mejores valores para el algoritmo de clustering.
+    @datos son los datos de los puntos, tal y como devuelve la función
+           leer_ejemplos_carpetas
+    """
+    
+    print("\nClusters\n")
+    
+    # Represento por separado los clusters de los puntos de cada iteracion
+    for puntos_it in datos:
+        # Obtengo los clusters de los puntos de la iteración actual
+        clusters_it = crear_clusters(np.expand_dims(puntos_it, axis=0)) # Uso expand_dims porque es necesario que el array tenga 3 dimensiones
+
+        # Pinto los puntos de la iteración actual de un color según el cluster
+        # al que pertenecen
+        if len(clusters_it) > 0:
+            for cluster, color in zip(clusters_it, mcolors.BASE_COLORS):
+                arr_puntos = np.array(cluster)
+                
+                plt.scatter(arr_puntos[:,0], arr_puntos[:,1], c=color)
+        
+            plt.show()
+
+def clusters_to_json(clusters, nom_fich):
+    """
+    Guarda los clusters de @clusters en el fichero @nom_fich usando
+    el formato JSON.
+    """
+    
+    # Si el archivo ya existe lanzo una excepción
+    if os.path.exists(nom_fich):
+        raise FileExistsError('¡Ya existe el archivo!')
+    
+    # Abro el archivo
+    with open(nom_fich, 'w') as f:
+        # Cada cluster es una línea del fichero
+        for i, cluster in enumerate(clusters):
+            num_puntos = len(cluster) # Número de puntos del cluster
+            
+            puntos = np.array(cluster) # Lo convierto a numpy array para poder separar las coordenadas X e Y
+            puntos_X = list(puntos[:,0]) # Los convierto a lista para que puedan ser guardados en el archivo
+            puntos_Y = list(puntos[:,1]) # mediante json.dumps
+            
+            # Creo el diccionario que guarda la información del cluster actual
+            dict_cluster = {'numero_cluster':i, 'numero_puntos':num_puntos,
+                            'puntosX':puntos_X, 'puntosY':puntos_Y}
+            
+            # Añado el diccionario al fichero
+            f.write(json.dumps(dict_cluster)+'\n')
+
+
 if __name__=='__main__':
     # <Leo los puntos>
     
     # Ejemplos positivos
-    datos_positivos = []
-    
-    listaDir=sorted(glob.glob("positivo*")) # Carpetas con los ejemplos positivos
-    
-    for carpeta in listaDir:
-        os.chdir(carpeta) # Cambio el directorio de trabajo a la carpeta
-        
-        # Obtengo el nombre del archivo json con los datos
-        nom_archivo = glob.glob('*.json')[0]
-        
-        # Leo los datos del archivo
-        datos_archivo = leer_datos_json(nom_archivo)
-        
-        # Los añado a los datos positivos
-        datos_positivos += datos_archivo
-        
-        os.chdir('..') # Vuelvo al antiguo directorio de trabajo
+    datos_positivos = leer_ejemplos_carpetas('positivo*')
 
     # Ejemplos negativos
-    datos_negativos = []
-    
-    listaDir=sorted(glob.glob("negativo*")) # Carpetas con los ejemplos negativos
-    
-    for carpeta in listaDir:
-        os.chdir(carpeta) # Cambio el directorio de trabajo a la carpeta
-        
-        # Obtengo el nombre del archivo json con los datos
-        nom_archivo = glob.glob('*.json')[0]
-        
-        # Leo los datos del archivo
-        datos_archivo = leer_datos_json(nom_archivo)
-        
-        # Los añado a los datos negativos
-        datos_negativos += datos_archivo
-        
-        os.chdir('..') # Vuelvo al antiguo directorio de trabajo
-        
+    datos_negativos = leer_ejemplos_carpetas('negativo*')
+
     # <Creo los clusters>
     
     # Clusters positivos (de piernas)
     clusters_positivos = crear_clusters(datos_positivos)
     
     # Clusters negativos (de cilindros)
-    clusters_negativos = crear_clusters(datos_negativos)        
+    clusters_negativos = crear_clusters(datos_negativos) 
+
+    # <Visualizo los clusters creados>
+    
+    # print("Clusters positivos")
+    # visualizar_clusters(datos_positivos)
+    # print("Clusters negativos")
+    # visualizar_clusters(datos_negativos)
+
+    # <Creo los ficheros JSON de los clusters>
+    
+    clusters_to_json(clusters_positivos, 'clustersPiernas.json')
+    clusters_to_json(clusters_negativos, 'clustersNoPiernas.json')

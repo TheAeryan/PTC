@@ -191,6 +191,5 @@ if __name__ == '__main__':
     cv2.destroyAllWindows()
     
     finFichero={"Iteraciones totales":iteracion}
-    #ficheroLaser.write('{}\n'.format(json.dumps(finFichero)))
     ficheroLaser.write(json.dumps(finFichero)+'\n')
     ficheroLaser.close()
