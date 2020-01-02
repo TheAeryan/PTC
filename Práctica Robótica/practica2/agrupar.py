@@ -33,6 +33,7 @@ def leer_datos_json(nom_fichero):
     with open(nom_fichero, 'r') as f:
         for line in f:
             objetos.append(json.loads(line))
+                
             
     # Devuelvo los puntos como una lista de la forma siguiente:
     # puntos[i] -> puntos de la iteración i
