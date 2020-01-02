@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import matplotlib.pyplot as plt
+import numpy as np
 import math
 import json
 import os
-import sys
+import csv
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 
 def leer_fichero_json(nombre_fichero):
     """
@@ -92,7 +94,7 @@ def obtener_carac_clusters(clusters, es_pierna):
         
         # Calculo la distancia de cada punto a la recta
         dist_puntos_a_recta = [dist_punto_a_recta(puntosX[i], puntosY[i], A, B, C) 
-                               for i in range(1, num_puntos-1)] # Me puedo saltar el primer y último punto (su distancia siempre vale 0)
+                               for i in range(1, num_puntos-1)] # Me puedo saltar el primer y último punto (sus distancias siempre son 0)
         
         # Calculo el máximo de esas distancias
         profundidad = max(dist_puntos_a_recta)
@@ -106,11 +108,62 @@ def obtener_carac_clusters(clusters, es_pierna):
         carac_clusters.append(carac_cluster_actual)
         
     return carac_clusters
-            
+  
+def guardar_caracteristicas_csv(lista_carac, nombre_archivo):
+    """
+    Guarda las características de los clústeres en el archivo @nombre_archivo
+    en formato csv.
+    @lista_carac Lista donde cada elemento es una lista de características
+                 (cada elemento es una lista de diccionarios)
+    """          
+    # Si el archivo ya existe lanzo una excepción
+    if os.path.exists(nombre_archivo):
+        raise FileExistsError('¡Ya existe el archivo!')
+    
+    with open(nombre_archivo, 'w') as f:
+        # Uso un objeto de la clase csv.writer para escribir los datos en formato csv
+        csvwriter = csv.writer(f)
+        
+        # Voy añadiendo las características al archivo en orden
+        for caracs in lista_carac:
+            # Cada elemento de caracs será una fila del archivo csv
+            for elem in caracs:
+                # Escribo los "values" (menos el índice de cluster) del diccionario como fila
+                csvwriter.writerow(list(elem.values())[1:]) 
+                
+def visualizar_caracteristicas(lista_carac):
+    """
+    Representa en una gráfica 3D las características de los clústeres de 
+    @lista_carac, de un color diferente según su clase.
+    """
+    
+    # Colores de cada clase
+    colores = {0:'red', 1:'blue'}
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d') # Uso un plot 3D
+    
+    for caracs in lista_carac:
+        # Conviertos los valores de los diccionarios (menos el índice de cluster)
+        # a un numpy array
+        datos = np.array([list(elem.values())[1:] for elem in caracs])
+        
+        # Obtengo el color a usar para cada clúster según su clase
+        colores_datos = [colores[int(elem['esPierna'])] for elem in caracs]
+        
+        ax.scatter(datos[:,0], datos[:,1], datos[:,2], color=colores_datos)
+        
+    # Etiquetas de los ejes    
+    ax.set_xlabel('perímetro')
+    ax.set_ylabel('profundidad')
+    ax.set_zlabel('anchura')
+    
+    plt.title("Clusteres según sus 3 características")
+    
+    plt.show()
 
 if __name__=='__main__':
     # <Cargo los archivos JSON que contienen los clústeres de piernas y no_piernas>
-    
     clusters_piernas = leer_fichero_json('clustersPiernas.json')
     clusters_no_piernas = leer_fichero_json('clustersNoPiernas.json') 
     
@@ -119,7 +172,13 @@ if __name__=='__main__':
     caracteristicas_no_piernas = obtener_carac_clusters(clusters_no_piernas, 0)
     
     # <Guardo las características en dos ficheros>
-    guardar_fichero_json(caracteristicas_piernas, 'caracteristicasPiernas.json')
-    guardar_fichero_json(caracteristicas_no_piernas, 'caracteristicasNoPiernas.json')
+    #guardar_fichero_json(caracteristicas_piernas, 'caracteristicasPiernas.json')
+    #guardar_fichero_json(caracteristicas_no_piernas, 'caracteristicasNoPiernas.json')
     
-    # <CREAR DATASET - TODO>
+    # <Represento las características de los ejemplos positivos y negativos
+    # para ver si son diferenciables en base a esas características>
+    visualizar_caracteristicas((caracteristicas_no_piernas, caracteristicas_piernas))
+    
+    # <Guardo las características en un único dataset con formato csv>
+    #guardar_caracteristicas_csv((caracteristicas_no_piernas, caracteristicas_piernas),
+    #                            'piernasDataset.csv')
