@@ -11,6 +11,7 @@ import os
 import glob
 
 if __name__ == '__main__':
+    # Obtengo los parámetros necesarios
     nom_fich = input('Introduzca el nombre del fichero (sin la extensión): ')
     str_num_ciclos = input('Introduzca el número de ciclos de lectura: ')
     str_tiempo_espera = input('Introduzca el tiempo en segundos entre ciclos de lectura: ')

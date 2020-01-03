@@ -52,10 +52,12 @@ def dist_punto_a_recta(x, y, A, B, C):
     
     return abs(A*x + B*y + C) / math.sqrt(A**2 + B**2)
 
-def obtener_carac_clusters(clusters, es_pierna):
+def obtener_carac_clusters(clusters, datos_etiquetados, es_pierna=0):
     """
     Devuelve una lista de diccionarios con el número de cluster, sus
-    características geométricas y si es pierna o no (parámetro @es_pierna)
+    características geométricas y si es pierna o no (parámetro @es_pierna),
+    en el caso de que datos_etiquetados valga True. Si vale False,
+    se omite la característica esPierna.
     """
     carac_clusters = []
     
@@ -100,10 +102,16 @@ def obtener_carac_clusters(clusters, es_pierna):
         profundidad = max(dist_puntos_a_recta)
         
         # <Añado estas características a "carac_clusters">
-        carac_cluster_actual = {'numero_cluster':cluster['numero_cluster'],
-                                'perimetro':perimetro,
-                                'profundidad':profundidad, 'anchura':anchura,
-                                'esPierna':es_pierna}
+        
+        if datos_etiquetados:
+            carac_cluster_actual = {'numero_cluster':cluster['numero_cluster'],
+                                    'perimetro':perimetro,
+                                    'profundidad':profundidad, 'anchura':anchura,
+                                    'esPierna':es_pierna}
+        else: # No uso la característica esPierna
+            carac_cluster_actual = {'numero_cluster':cluster['numero_cluster'],
+                                    'perimetro':perimetro,
+                                    'profundidad':profundidad, 'anchura':anchura}
         
         carac_clusters.append(carac_cluster_actual)
         
@@ -176,8 +184,8 @@ if __name__=='__main__':
     clusters_no_piernas = leer_fichero_json('clustersNoPiernas.json') 
     
     # <Obtengo las características de los clusters>
-    caracteristicas_piernas = obtener_carac_clusters(clusters_piernas, 1)
-    caracteristicas_no_piernas = obtener_carac_clusters(clusters_no_piernas, 0)
+    caracteristicas_piernas = obtener_carac_clusters(clusters_piernas, True, 1)
+    caracteristicas_no_piernas = obtener_carac_clusters(clusters_no_piernas, True, 0)
     
     # <Guardo las características en dos ficheros>
     guardar_fichero_json(caracteristicas_piernas, 'caracteristicasPiernas.json')

@@ -13,10 +13,10 @@ import math
 # Los valores obtenidos de estos parámetros me proporcionan buenos clusters
 # para todos los casos menos para los de cilindroMenorLejos (ya que tienen
 # pocos puntos)
-min_puntos_cluster=3  # Valor pequeño debido a que de los cilindros pequeños se obtienen pocos datos
+min_puntos_cluster_ =3  # Valor pequeño debido a que de los cilindros pequeños se obtienen pocos datos
                       # No puedo aumentar más el valor o no obtengo ningún clúster de cilindroMenorLejos
-max_puntos_cluster=50 # Valor grande debido a que los datos de los cilindros grandes cerca tienen muchos puntos
-umbral_distancia = 0.04 # Valor que hace que los puntos del mismo objeto estén en el mismo cluster pero que los de
+max_puntos_cluster_ =50 # Valor grande debido a que los datos de los cilindros grandes cerca tienen muchos puntos
+umbral_distancia_ = 0.04 # Valor que hace que los puntos del mismo objeto estén en el mismo cluster pero que los de
                         # objetos diferentes estén en distintos clusters
 
 distancias = ['Cerca', 'Medio', 'Lejos']
@@ -75,10 +75,20 @@ def dist(x1, y1, x2, y2):
     
     return math.sqrt((x1-x2)**2 + (y1-y2)**2)
 
-def crear_clusters(datos):
+def crear_clusters(datos, min_puntos_cluster, max_puntos_cluster,
+                   umbral_distancia):
     """
     Devuelve los clusters de puntos usando el algoritmo de agrupación
     por distancia de salto.
+    @datos Lista donde cada elemento son los puntos de cada iteración.
+           Los puntos de cada iteración se representan mediante una lista
+           de dos elementos: elem[0] es una lista con las coordenadas
+           X de los puntos de la iteración y elem[1] una lista con las
+           coordenadas Y.
+           
+    @return Devuelve los clusters con el siguiente formato:
+            Lista donde cada elemento es un clúster. Cada clúster
+            se representa como una lista de puntos (x, y).
     """
     
     clusters = []
@@ -145,8 +155,8 @@ def visualizar_clusters(datos):
 
 def clusters_to_json(clusters, nom_fich):
     """
-    Guarda los clusters de @clusters en el fichero @nom_fich usando
-    el formato JSON.
+    Transforma los clusters de @clusters a formato JSON y los guarda
+    en el archivo @nom_fich.
     """
     
     # Si el archivo ya existe lanzo una excepción
@@ -183,10 +193,16 @@ if __name__=='__main__':
     # <Creo los clusters>
     
     # Clusters positivos (de piernas)
-    clusters_positivos = crear_clusters(datos_positivos)
+    clusters_positivos = crear_clusters(datos_positivos, 
+                                        min_puntos_cluster_, 
+                                        max_puntos_cluster_,
+                                        umbral_distancia_)
     
     # Clusters negativos (de cilindros)
-    clusters_negativos = crear_clusters(datos_negativos) 
+    clusters_negativos = crear_clusters(datos_negativos, 
+                                        min_puntos_cluster_, 
+                                        max_puntos_cluster_,
+                                        umbral_distancia_)
 
     # <Visualizo los clusters creados>
     
