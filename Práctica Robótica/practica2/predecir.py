@@ -181,7 +181,7 @@ def dibujar_clusteres_clasificados(clusters_dict, y_pred, umbral_dist=0.4):
 
 if __name__=='__main__':
     # <Recibo los datos del láser de la escena de test>
-    #datos_laser = obtener_datos_laser_simulador()
+    datos_laser = obtener_datos_laser_simulador()
 
     # <Convierto los datos en clústeres>
     
