@@ -75,18 +75,12 @@ if __name__ == '__main__':
     
     _, robothandle = vrep.simxGetObjectHandle(clientID, 'Pioneer_p3dx', vrep.simx_opmode_oneshot_wait)
             
-    #Guardar la referencia de los motores
-    _, left_motor_handle=vrep.simxGetObjectHandle(clientID, 'Pioneer_p3dx_leftMotor', vrep.simx_opmode_oneshot_wait)
-    _, right_motor_handle=vrep.simxGetObjectHandle(clientID, 'Pioneer_p3dx_rightMotor', vrep.simx_opmode_oneshot_wait)
-     
     #Guardar la referencia de la camara
     _, camhandle = vrep.simxGetObjectHandle(clientID, 'Vision_sensor', vrep.simx_opmode_oneshot_wait)
      
     #acceder a los datos del laser
     _, datosLaserComp = vrep.simxGetStringSignal(clientID,'LaserData',vrep.simx_opmode_streaming)
     
-    
-    velocidad = 0.35 #Variable para la velocidad de los motores
      
     #Iniciar la camara y esperar un segundo para llenar el buffer
     _, resolution, image = vrep.simxGetVisionSensorImage(clientID, camhandle, 0, vrep.simx_opmode_streaming)
@@ -143,23 +137,7 @@ if __name__ == '__main__':
             x = int(moments['m10']/moments['m00'])
             y = int(moments['m01']/moments['m00'])
             cv2.rectangle(img, (x, y), (x+2, y+2),(0,0,255), 2)
-            #Descomentar para printear la posicion del centro
-            #print(x,y)
-     
-            #Si el centro del objeto esta en la parte central de la pantalla (aprox.), detener motores
-            if abs(x-256/2) < 15:
-                vrep.simxSetJointTargetVelocity(clientID, left_motor_handle,0,vrep.simx_opmode_streaming)
-                vrep.simxSetJointTargetVelocity(clientID, right_motor_handle,0,vrep.simx_opmode_streaming)
-     
-            #Si no, girar los motores hacia la derecha o la izquierda
-            elif x > 256/2:
-                vrep.simxSetJointTargetVelocity(clientID, left_motor_handle,velocidad,vrep.simx_opmode_streaming)
-                vrep.simxSetJointTargetVelocity(clientID, right_motor_handle,-velocidad,vrep.simx_opmode_streaming)
-            elif x < 256/2:
-                vrep.simxSetJointTargetVelocity(clientID, left_motor_handle,-velocidad,vrep.simx_opmode_streaming)
-                vrep.simxSetJointTargetVelocity(clientID, right_motor_handle,velocidad,vrep.simx_opmode_streaming)
-     
-     
+          
         #Mostrar frame y salir con "ESC"
         cv2.imshow('Image', img)
         cv2.imshow('Mask', mask)
@@ -176,10 +154,6 @@ if __name__ == '__main__':
         iteracion=iteracion+1
        
     
-    #detenemos los motores
-    vrep.simxSetJointTargetVelocity(clientID, left_motor_handle,0,vrep.simx_opmode_streaming)
-    vrep.simxSetJointTargetVelocity(clientID, right_motor_handle,0,vrep.simx_opmode_streaming)
-        
     time.sleep(1)
     
     #detenemos la simulacion
