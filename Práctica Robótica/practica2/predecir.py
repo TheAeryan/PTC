@@ -6,6 +6,7 @@ import time
 import numpy as np
 import joblib
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 
@@ -176,7 +177,17 @@ def dibujar_clusteres_clasificados(clusters_dict, y_pred, umbral_dist=0.4):
                     plt.scatter(pos_obj_x, pos_obj_y, s=40,
                                 color=colores[int(y_pred[i])],
                                 marker='s')
-                         
+        
+    # Muestro las leyendas
+    
+    leg_no_pierna = mlines.Line2D([], [], color='blue', marker='o',
+                          markersize=5, label='No Pierna (0)')
+    leg_pierna = mlines.Line2D([], [], color='red', marker='o',
+                          markersize=5, label='Pierna (1)')
+    
+    plt.legend(handles=[leg_no_pierna, leg_pierna], loc='upper left')
+
+                 
     plt.show()
 
 if __name__=='__main__':
