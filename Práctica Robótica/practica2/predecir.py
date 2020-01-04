@@ -209,7 +209,7 @@ def visualizar_clusters_por_separado(dict_clusters):
 
 if __name__=='__main__':
     # <Recibo los datos del láser de la escena de test>
-    datos_laser = obtener_datos_laser_simulador()
+    # datos_laser = obtener_datos_laser_simulador()
 
     # <Convierto los datos en clústeres>
     
@@ -259,7 +259,7 @@ if __name__=='__main__':
     
     # <Visualizo los clusters para ver si se han creado correctamente>
     # NO BORRAR!
-    # visualizar_clusters_por_separado(clusters_dict)
+    visualizar_clusters_por_separado(clusters_dict)
     
     # Los clusters son creados correctamente. Por tanto, fallan los ejemplos.
     # Hasta ahora, he usado 323 ejemplos negativos (clusters de no_piernas)
