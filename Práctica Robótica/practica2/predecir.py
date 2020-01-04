@@ -7,8 +7,7 @@ import numpy as np
 import joblib
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
-from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score
+import matplotlib.colors as mcolors # Lista de colores de matplotlib
 
 import agrupar
 import caracteristicas as carac
@@ -137,7 +136,10 @@ def dibujar_clusteres_clasificados(clusters_dict, y_pred, umbral_dist=0.4):
         
     # Colores de cada clase
     colores = {0:'blue', 1:'red'}
-        
+    
+    # Tamaño de la gráfica
+    plt.figure(figsize = (7,5)) 
+    
     # Dibujo cada cluster        
     for cluster, pred in zip(clusters_dict, y_pred):                        
         plt.scatter(cluster['puntosX'], cluster['puntosY'],
@@ -186,8 +188,23 @@ def dibujar_clusteres_clasificados(clusters_dict, y_pred, umbral_dist=0.4):
                           markersize=5, label='Pierna (1)')
     
     plt.legend(handles=[leg_no_pierna, leg_pierna], loc='upper left')
-
-                 
+          
+    plt.show()
+    
+def visualizar_clusters_por_separado(dict_clusters):
+    """
+    Representa los clusters (@clusters tiene como formato una lista
+    de diccionarios), cada uno de un color diferente.
+    """
+        
+    # Tamaño de la gráfica
+    plt.figure(figsize = (7,5)) 
+    
+    for cluster in dict_clusters:                        
+        plt.scatter(cluster['puntosX'], cluster['puntosY'],
+                    s=10,
+                    color=np.random.rand(3,)) # Cada cluster lo pinto de un color aleatorio
+        
     plt.show()
 
 if __name__=='__main__':
@@ -234,5 +251,34 @@ if __name__=='__main__':
     
     # <Dibujo los clústers obtenidos según su clase>
     dibujar_clusteres_clasificados(clusters_dict, y_pred)
+    
+    # ------- Tras haber visto los resultados en la escena de test -------
+    
+    # Me clasifica todo bien menos una porción de muro y dos cilindros
+    # que dice que son dos piernas
+    
+    # <Visualizo los clusters para ver si se han creado correctamente>
+    # NO BORRAR!
+    # visualizar_clusters_por_separado(clusters_dict)
+    
+    # Los clusters son creados correctamente. Por tanto, fallan los ejemplos.
+    # Hasta ahora, he usado 323 ejemplos negativos (clusters de no_piernas)
+    # y 343 ejemplos positivos (clusters de piernas)
+    
+    # Añado ejemplos de paredes -> 3 tamaños y para cada trío voy variando
+    # la distancia: creo 15 clusters en total (tomo 5 iteraciones -> 5x3=15)
+    # Paredes: ancho -> 0.7, 0.3 y 0.1, de profundidad 0.01 para que el láser
+    # no colisiones sobre los bordes
+    
+    # Añado ejemplos de cilindros más parecidos a las piernas (un poco más pequeños
+    # que los cilindros grandes): uso parejas de cilindros y tomo muestras a 
+    # distintas distancias y rotaciones. En total uso 20 iteraciones (40 clusters
+    # aprox.). No uso más porque no quiero que las clases sean muy desbalanceadas.
+    
+    
+    
+    
+    
+    
     
     

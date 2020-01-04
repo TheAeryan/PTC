@@ -128,9 +128,10 @@ def crear_clusters(datos, min_puntos_cluster, max_puntos_cluster,
                 
     return clusters
 
-def visualizar_clusters(datos):
+def visualizar_clusters(datos, min_puntos_cluster, max_puntos_cluster,
+                                     umbral_distancia):
     """
-    Función auxiliar que uso para visualizar los clusters creados y así
+    Función auxiliar que uso para crear y visualizar los clusters y así
     elegir los mejores valores para el algoritmo de clustering.
     @datos son los datos de los puntos, tal y como devuelve la función
            leer_ejemplos_carpetas
@@ -141,7 +142,9 @@ def visualizar_clusters(datos):
     # Represento por separado los clusters de los puntos de cada iteracion
     for puntos_it in datos:
         # Obtengo los clusters de los puntos de la iteración actual
-        clusters_it = crear_clusters(np.expand_dims(puntos_it, axis=0)) # Uso expand_dims porque es necesario que el array tenga 3 dimensiones
+        clusters_it = crear_clusters(np.expand_dims(puntos_it, axis=0),
+                                     min_puntos_cluster, max_puntos_cluster,
+                                     umbral_distancia) # Uso expand_dims porque es necesario que el array tenga 3 dimensiones
 
         # Pinto los puntos de la iteración actual de un color según el cluster
         # al que pertenecen
@@ -207,9 +210,9 @@ if __name__=='__main__':
     # <Visualizo los clusters creados>
     
     # print("Clusters positivos")
-    # visualizar_clusters(datos_positivos)
+    # visualizar_clusters(datos_positivos, min_puntos_cluster_, max_puntos_cluster_, umbral_distancia_)
     # print("Clusters negativos")
-    # visualizar_clusters(datos_negativos)
+    # visualizar_clusters(datos_negativos, min_puntos_cluster_, max_puntos_cluster_, umbral_distancia_)
 
     # <Creo los ficheros JSON de los clusters>
     

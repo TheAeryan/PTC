@@ -181,7 +181,7 @@ def visualizar_caracteristicas(lista_carac):
 if __name__=='__main__':
     # <Cargo los archivos JSON que contienen los clústeres de piernas y no_piernas>
     clusters_piernas = leer_fichero_json('clustersPiernas.json')
-    clusters_no_piernas = leer_fichero_json('clustersNoPiernas.json') 
+    clusters_no_piernas = leer_fichero_json('clustersNoPiernas.json')
     
     # <Obtengo las características de los clusters>
     caracteristicas_piernas = obtener_carac_clusters(clusters_piernas, True, 1)
