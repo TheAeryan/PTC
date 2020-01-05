@@ -5,6 +5,7 @@ import cv2
 import vrep
 import time
 import math
+import os
 
 from predecir import clusterizar_y_clasificar, obtener_datos_laser_simulador
 from caracteristicas import dist
@@ -26,7 +27,7 @@ def agrupar_clusters_en_objetos(clusters_dict, y_pred, umbral_dist=0.4):
         cent_x = float(np.average(cluster['puntosX']))
         cent_y = float(np.average(cluster['puntosY']))
         
-        cent_clusters.append((cent_x, cent_y))
+        cent_clusters.append((cent_x, cent_y))  
         
     # <Agrupo los clusters cercanos en objetos>
     
@@ -38,7 +39,7 @@ def agrupar_clusters_en_objetos(clusters_dict, y_pred, umbral_dist=0.4):
     # o puede agruparse con otro cluster y formar ambos el mismo objeto
     clusters_incluidos = [False] * len(clusters_dict)
     
-    for i in range(len(clusters_dict)-1):
+    for i in range(len(clusters_dict)):
         # Me salto el cluster i si ya ha sido incluido
         if clusters_incluidos[i] == False:
             # Intengo agrupar el cluster i con algún otro cluster cercano y de la misma clase
@@ -98,7 +99,8 @@ def tomar_foto_objetos(objetos_dict, clientID, robothandle):
     # Cámara
     _, camhandle = vrep.simxGetObjectHandle(clientID, 'Vision_sensor', vrep.simx_opmode_oneshot_wait)
         
-    velocidad = 0.35 #Variable para la velocidad de los motores
+    #Variable para la velocidad de los motores
+    velocidad = 0.2 # Muevo el robot lentamente para centrar bien los objetos en la cámara
     
     #Iniciar la camara y esperar un segundo para llenar el buffer
     _, resolution, image = vrep.simxGetVisionSensorImage(clientID, camhandle, 0, vrep.simx_opmode_streaming)
@@ -109,13 +111,7 @@ def tomar_foto_objetos(objetos_dict, clientID, robothandle):
     # Imágenes de cada objeto    
     lista_ims = []    
     
-    # Quitar
-    ind = 0
-    
     for obj in objetos_dict:
-        print("Pos: {} {}".format(obj['posX'], obj['posY']))
-        print("Tipo:", obj['tipoObjeto'])
-        
         # Calculo la orientación del robot
         # Solo me interesa la rotación en el eje Z (valor gamma)
         robot_orient=vrep.simxGetObjectOrientation(clientID, robothandle, 0, vrep.simx_opmode_oneshot_wait)[1][2]
@@ -148,9 +144,8 @@ def tomar_foto_objetos(objetos_dict, clientID, robothandle):
         umbral_dif_orientaciones = 0.01
         
         while abs(obj_orient - robot_orient) > umbral_dif_orientaciones:
-            time.sleep(0.05)
+            time.sleep(0.01) # Intervalo cada cual se comprueba si el objeto ya está centrado en la cámara
             robot_orient=vrep.simxGetObjectOrientation(clientID, robothandle, 0, vrep.simx_opmode_oneshot_wait)[1][2]
-            print(robot_orient)
           
         # Paro los motores
         vrep.simxSetJointTargetVelocity(clientID, left_motor_handle,0,vrep.simx_opmode_streaming)
@@ -165,10 +160,6 @@ def tomar_foto_objetos(objetos_dict, clientID, robothandle):
         img = np.rot90(img,2)
         img = np.fliplr(img)
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-             
-        # Guardo la foto QUITAR!!!!
-        cv2.imwrite('Foto_{}_{}.jpg'.format(obj['tipoObjeto'],ind), img)
-        ind+=1
         
         # Añado la foto a la lista
         lista_ims.append(img)
@@ -182,6 +173,93 @@ def tomar_foto_objetos(objetos_dict, clientID, robothandle):
     
     # Devuelvo la lista de imágenes de los objetos
     return lista_ims
+
+def crear_web(objetos_dict, y_true, obj_ims, archivo_web, carpeta_ims='.'):
+    """
+    Crea una web de nombre @archivo_web que muestra una tabla con la
+    información de los objetos clasificados, incluidas sus imágenes.
+    
+    @objetos_dict Información de los objetos, en forma de lista de diccionarios.
+    @y_true Lista de clases verdaderas de los objetos de @objetos_dict
+    @obj_ims Imágenes tomadas de cada uno de los objetos
+    @carpeta_ims Carpeta donde se guardan las imágenes @obj_ims a usar
+                 para la web. Si la carpeta no existe se crea.
+    """
+
+    # Asocia a cada clase su nombre
+    dict_clases = {0:'No Pierna', 1:'Pierna'}
+
+    # <Creo una carpeta para guardar las imágenes, a no ser que exista ya>
+    if carpeta_ims != '.':
+        if not os.path.isdir(carpeta_ims):
+            os.mkdir(carpeta_ims) # Creo la carpeta
+
+    # <Guardo las imágenes en la carpeta>
+    
+    # Lista con los nombres de los archivos de las imágenes
+    nombres_ims = []
+    
+    for ind, im in enumerate(obj_ims):
+        nombre_im = '{}/img_{}.jpg'.format(carpeta_ims, ind)
+        nombres_ims.append(nombre_im)
+        
+        cv2.imwrite(nombre_im, im) # Guardo la imagen
+
+    # <Creo el código html de la tabla>
+    
+    html_web = """<!DOCTYPE html><html>
+    <head><title>Resultados</title>
+    <meta charset="utf8"></head>
+    <body><h1>Tabla con los objetos clasificados</h1>
+    <style type="text/css">
+        table, th, td {
+          border: 1px solid black;
+          border-collapse: collapse;
+          text-align: center;
+          padding: 10px;
+        }
+    </style>
+    <table>
+    <tr>
+        <th>Tipo de objeto</th>
+        <th>Valor de la predicción</th>
+        <th>Distancia al robot</th>
+        <th>Imagen del objeto</th>
+    </tr>"""
+    
+    for obj, path_im, clase_real in zip(objetos_dict, nombres_ims, y_true):
+        # Tipo de objeto
+        tipo_obj = dict_clases[clase_real]
+        
+        # Valor de la predicción
+        val_pred = dict_clases[obj['tipoObjeto']]
+        
+        # Distancia al robot
+        dist_robot = dist(0,0,obj['posX'],obj['posY'])
+        
+        # Añado la fila correspondiente a 'obj'
+        html_web+= \
+        """
+        <tr>
+            <td>{}</td>
+            <td>{}</td>
+            <td>{:.2f}</td>
+            <td><img src="{}" alt="Imagen Objeto" /></td>
+        </tr>
+        """.format(tipo_obj, val_pred, dist_robot, path_im)
+        
+    html_web += \
+    """
+    </table>
+    </body>
+    </html>
+    """
+    
+    # <Guardo el archivo de la web>
+    
+    with open(archivo_web, 'w') as f:
+        f.write(html_web)
+        
 
 if __name__=='__main__':
     # <Recibo los datos del láser de la escena y clasifico los objetos>
@@ -207,4 +285,15 @@ if __name__=='__main__':
     objetos_dict = agrupar_clusters_en_objetos(clusters_dict, y_pred)
     
     # <Para cada objeto, oriento el robot hacia él y le tomo una foto>
+    print("\nTomando fotos de los objetos...")
+    
     obj_ims = tomar_foto_objetos(objetos_dict, clientID, robothandle)
+    
+    print("\nFotos tomadas!")
+    
+    # <Creo la página web>
+    
+    # Clases verdaderas
+    y_true = [1, 1, 0, 1, 0, 0, 1, 0]
+    
+    crear_web(objetos_dict, y_true, obj_ims, 'resultados.html', 'imagenes_web')
