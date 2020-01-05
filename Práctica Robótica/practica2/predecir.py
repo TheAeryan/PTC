@@ -13,11 +13,15 @@ import agrupar
 import caracteristicas as carac
 from caracteristicas import dist
 
-def obtener_datos_laser_simulador():
+def obtener_datos_laser_simulador(terminar_conexion=True):
     """
     Se conecta al simulador y obtiene los datos del láser, que devuelve
     como una lista de dos elementos: lista[0] es una lista con las coordenadas
-    X de los puntos y lista[1] una lista con las coordenadas Y.
+    X de los puntos y lista[1] una lista con las coordenadas Y. También
+    devuelve el clientID.
+    
+    @terminar_conexion Si vale True, se termina la simulación tras obtener
+                       los datos del láser.
     """
     vrep.simxFinish(-1) #Terminar todas las conexiones
     clientID=vrep.simxStart('127.0.0.1',19999,True,True,5000,5) #Iniciar una nueva conexion en el puerto 19999 (direccion por defecto)
@@ -49,15 +53,16 @@ def obtener_datos_laser_simulador():
         puntosx.append(datosLaser[indice+1])
         puntosy.append(datosLaser[indice+2])
         puntosz.append(datosLaser[indice])
+
+    if terminar_conexion:
+        #detenemos la simulacion
+        vrep.simxStopSimulation(clientID,vrep.simx_opmode_oneshot_wait)
+        
+        #cerramos la conexion
+        vrep.simxFinish(clientID)   
     
-    #detenemos la simulacion
-    vrep.simxStopSimulation(clientID,vrep.simx_opmode_oneshot_wait)
-    
-    #cerramos la conexion
-    vrep.simxFinish(clientID)   
-    
-    # Devuelvo los puntos
-    return [puntosx, puntosy]
+    # Devuelvo los puntos y el clientID
+    return [puntosx, puntosy], clientID
 
 def clusters_to_dict(clusters):
     """
@@ -158,27 +163,36 @@ def dibujar_clusteres_clasificados(clusters_dict, y_pred, umbral_dist=0.4):
         cent_clusters.append((cent_x, cent_y))
         
     # Veo si cada clúster lo puedo agrupar con otro
+    
+    # Cada cluster solo se puede agrupar como máximo con otro
+    clusters_agrupados = [False] * len(clusters_dict)
+    
     for i in range(len(clusters_dict)-1):
         for j in range(i+1, len(clusters_dict)):
-            # Para que ambos clústeres puedan ser del mismo objeto,
-            # tienen que pertenecer a la misma clase
-            if y_pred[i] == y_pred[j]:
-                # Calculo la distancia entre sus centroides
-                dist_clusters = dist(cent_clusters[i][0], cent_clusters[i][1],
-                                     cent_clusters[j][0], cent_clusters[j][1])
-                
-                # Si están cerca, son del mismo objeto
-                if dist_clusters <= umbral_dist:
-                    # Calculo la posición del objeto al que pertenecen
-                    # los dos clusters
-                    pos_obj_x = (cent_clusters[i][0] + cent_clusters[j][0]) / 2
-                    pos_obj_y = (cent_clusters[i][1] + cent_clusters[j][1]) / 2
+            # Cada cluster solo se puede agrupar con otro como mucho
+            if clusters_agrupados[i] == False and clusters_agrupados[j] == False:
+                # Para que ambos clústeres puedan ser del mismo objeto,
+                # tienen que pertenecer a la misma clase
+                if y_pred[i] == y_pred[j]:
+                    # Calculo la distancia entre sus centroides
+                    dist_clusters = dist(cent_clusters[i][0], cent_clusters[i][1],
+                                         cent_clusters[j][0], cent_clusters[j][1])
                     
-                    # Muestro un punto (con forma de cuadrado) en la posición
-                    # del objeto, según la clase a la que pertenece
-                    plt.scatter(pos_obj_x, pos_obj_y, s=40,
-                                color=colores[int(y_pred[i])],
-                                marker='s')
+                    # Si están cerca, son del mismo objeto
+                    if dist_clusters <= umbral_dist:
+                        # Calculo la posición del objeto al que pertenecen
+                        # los dos clusters
+                        pos_obj_x = (cent_clusters[i][0] + cent_clusters[j][0]) / 2
+                        pos_obj_y = (cent_clusters[i][1] + cent_clusters[j][1]) / 2
+                        
+                        # Muestro un punto (con forma de cuadrado) en la posición
+                        # del objeto, según la clase a la que pertenece
+                        plt.scatter(pos_obj_x, pos_obj_y, s=40,
+                                    color=colores[int(y_pred[i])],
+                                    marker='s')
+                        
+                        # Marco los clusters como ya agrupados
+                        clusters_agrupados[i] = clusters_agrupados[j] = True
         
     # Muestro las leyendas
     
@@ -207,18 +221,21 @@ def visualizar_clusters_por_separado(dict_clusters):
         
     plt.show()
 
-if __name__=='__main__':
-    # <Recibo los datos del láser de la escena de test>
-    # datos_laser = obtener_datos_laser_simulador()
-
+def clusterizar_y_clasificar(datos_laser, min_puntos_cluster, max_puntos_cluster,
+                             umbral_distancia, nom_modelo, nom_dataset_train):
+    """
+    A partir de los datos del láser del simulador, realiza todo el proceso:
+    genera los clusters, obtiene sus características geométricas y los
+    clasifica con el modelo @nom_modelo preentrenado.
+    
+    @nom_dataset_train Archivo del dataset de entrenamiento, usado para
+                       normalizar de la misma forma los datos de la escena
+                       de test.
+    @return Devuelve los clústeres obtenidos (mediante una lista de diccionarios)
+            y un vector con las predicción de la clase de cada cluster.
+    """
     # <Convierto los datos en clústeres>
-    
-    # Parámetros para el algoritmo de salto
-    min_puntos_cluster = 3
-    max_puntos_cluster = 50
-    umbral_distancia = 0.04 
-    
-    clusters = agrupar.crear_clusters([datos_laser], min_puntos_cluster, 
+    clusters = agrupar.crear_clusters(datos_laser, min_puntos_cluster, 
                                         max_puntos_cluster,
                                         umbral_distancia)
     
@@ -235,7 +252,7 @@ if __name__=='__main__':
     # <Uso el clasificador entrenado para clasificar los clústeres>
     
     # Cargo el clasificador
-    clasificador = joblib.load('clasificador.pkl') 
+    clasificador = joblib.load(nom_modelo) 
     
     # Convierto las características al formato que acepta el modelo
     # como entrada
@@ -244,12 +261,32 @@ if __name__=='__main__':
     # Normalizo las características de la misma forma que el dataset
     # de entrenamiento (uso la media y desviación típica del dataset
     # de entrenamiento)
-    X_norm = normalizar_dataset_test(X, 'piernasDataset.csv')
+    X_norm = normalizar_dataset_test(X, nom_dataset_train)
     
     # Uso el clasificador para predecir la clase de cada clúster
     y_pred = clasificador.predict(X_norm)
     
-    # <Dibujo los clústers obtenidos según su clase>
+    return clusters_dict, y_pred
+
+
+if __name__=='__main__':
+    # <Recibo los datos del láser de la escena de test>
+    datos_laser, _ = obtener_datos_laser_simulador()
+
+    # <Realizo todo el proceso de clustering y clasificación de los
+    # puntos del láser>
+    
+    # Parámetros para el algoritmo de salto
+    min_puntos_cluster = 3
+    max_puntos_cluster = 50
+    umbral_distancia = 0.04
+    
+    clusters_dict, y_pred = clusterizar_y_clasificar([datos_laser],
+                             min_puntos_cluster,
+                             max_puntos_cluster, umbral_distancia,
+                             'clasificador.pkl', 'piernasDataset.csv')
+    
+    # <Dibujo los clusters obtenidos según su clase>
     dibujar_clusteres_clasificados(clusters_dict, y_pred)
     
     # ------- Tras haber visto los resultados en la escena de test -------
@@ -259,7 +296,7 @@ if __name__=='__main__':
     
     # <Visualizo los clusters para ver si se han creado correctamente>
     # NO BORRAR!
-    visualizar_clusters_por_separado(clusters_dict)
+    # visualizar_clusters_por_separado(clusters_dict)
     
     # Los clusters son creados correctamente. Por tanto, fallan los ejemplos.
     # Hasta ahora, he usado 323 ejemplos negativos (clusters de no_piernas)
