@@ -18,7 +18,7 @@ def obtener_datos_laser_simulador(terminar_conexion=True):
     Se conecta al simulador y obtiene los datos del láser, que devuelve
     como una lista de dos elementos: lista[0] es una lista con las coordenadas
     X de los puntos y lista[1] una lista con las coordenadas Y. También
-    devuelve el clientID.
+    devuelve el clientID y robothandle.
     
     @terminar_conexion Si vale True, se termina la simulación tras obtener
                        los datos del láser.
@@ -62,7 +62,7 @@ def obtener_datos_laser_simulador(terminar_conexion=True):
         vrep.simxFinish(clientID)   
     
     # Devuelvo los puntos y el clientID
-    return [puntosx, puntosy], clientID
+    return [puntosx, puntosy], clientID, robothandle
 
 def clusters_to_dict(clusters):
     """
@@ -271,7 +271,7 @@ def clusterizar_y_clasificar(datos_laser, min_puntos_cluster, max_puntos_cluster
 
 if __name__=='__main__':
     # <Recibo los datos del láser de la escena de test>
-    datos_laser, _ = obtener_datos_laser_simulador()
+    datos_laser, _, _ = obtener_datos_laser_simulador()
 
     # <Realizo todo el proceso de clustering y clasificación de los
     # puntos del láser>
