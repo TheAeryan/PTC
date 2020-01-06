@@ -239,7 +239,7 @@ def clusterizar_y_clasificar(datos_laser, min_puntos_cluster, max_puntos_cluster
                                         max_puntos_cluster,
                                         umbral_distancia)
     
-    # <Obtengo las caracteristicas geométricas de los clústeres>
+    # <Obtengo las características geométricas de los clústeres>
     
     # Transformo los clusters a un formato de diccionario
     clusters_dict = clusters_to_dict(clusters)
@@ -289,14 +289,16 @@ if __name__=='__main__':
     # <Dibujo los clusters obtenidos según su clase>
     dibujar_clusteres_clasificados(clusters_dict, y_pred)
     
+    # <Visualizo los clusters para ver si se han creado correctamente>
+    # ~Descomentar~
+    # visualizar_clusters_por_separado(clusters_dict)
+    
     # ------- Tras haber visto los resultados en la escena de test -------
     
     # Me clasifica todo bien menos una porción de muro y dos cilindros
     # que dice que son dos piernas
     
-    # <Visualizo los clusters para ver si se han creado correctamente>
-    # NO BORRAR!
-    # visualizar_clusters_por_separado(clusters_dict)
+
     
     # Los clusters son creados correctamente. Por tanto, fallan los ejemplos.
     # Hasta ahora, he usado 323 ejemplos negativos (clusters de no_piernas)
