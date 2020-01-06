@@ -293,28 +293,6 @@ if __name__=='__main__':
     # ~Descomentar~
     # visualizar_clusters_por_separado(clusters_dict)
     
-    # ------- Tras haber visto los resultados en la escena de test -------
-    
-    # Me clasifica todo bien menos una porción de muro y dos cilindros
-    # que dice que son dos piernas
-    
-
-    
-    # Los clusters son creados correctamente. Por tanto, fallan los ejemplos.
-    # Hasta ahora, he usado 323 ejemplos negativos (clusters de no_piernas)
-    # y 343 ejemplos positivos (clusters de piernas)
-    
-    # Añado ejemplos de paredes -> 3 tamaños y para cada trío voy variando
-    # la distancia: creo 15 clusters en total (tomo 5 iteraciones -> 5x3=15)
-    # Paredes: ancho -> 0.7, 0.3 y 0.1, de profundidad 0.01 para que el láser
-    # no colisiones sobre los bordes
-    
-    # Añado ejemplos de cilindros más parecidos a las piernas (un poco más pequeños
-    # que los cilindros grandes): uso parejas de cilindros y tomo muestras a 
-    # distintas distancias y rotaciones. En total uso 20 iteraciones (40 clusters
-    # aprox.). No uso más porque no quiero que las clases sean muy desbalanceadas.
-    
-    
     
     
     

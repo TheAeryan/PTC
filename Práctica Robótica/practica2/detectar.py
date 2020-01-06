@@ -294,6 +294,6 @@ if __name__=='__main__':
     # <Creo la página web>
     
     # Clases verdaderas
-    y_true = [1, 1, 0, 1, 0, 0, 1, 0]
+    y_true = [1, 0, 1, 0, 0]
     
     crear_web(objetos_dict, y_true, obj_ims, 'resultados.html', 'imagenes_web')
