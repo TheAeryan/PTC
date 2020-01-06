@@ -269,7 +269,7 @@ if __name__=='__main__':
     datos_laser, clientID, robothandle = obtener_datos_laser_simulador(False)
 
     # Realizo todo el proceso de clustering y clasificación de los
-    # puntos del láser
+    # clústeres
     
     # Parámetros para el algoritmo de salto
     min_puntos_cluster = 3
