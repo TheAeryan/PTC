@@ -162,8 +162,6 @@ if __name__=='__main__':
     X_ori = datos[:,:-1] # Atributos
     y = datos[:, -1] # Etiquetas
     
-    # Divido el dataset en training y test
-    
     # Normalizo los datos para que cada característica tenga media 0
     # y desviación típica 1
         

@@ -195,7 +195,7 @@ if __name__=='__main__':
     # para ver si son diferenciables en base a esas características>
     
     # ~Descomentar~
-    visualizar_caracteristicas((caracteristicas_no_piernas, caracteristicas_piernas))
+    # visualizar_caracteristicas((caracteristicas_no_piernas, caracteristicas_piernas))
     
     # <Guardo las características en un único dataset con formato csv>
     guardar_caracteristicas_csv((caracteristicas_no_piernas, caracteristicas_piernas),
