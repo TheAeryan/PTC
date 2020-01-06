@@ -209,10 +209,11 @@ if __name__=='__main__':
 
     # <Visualizo los clusters creados>
     
-    # print("Clusters positivos")
-    # visualizar_clusters(datos_positivos, min_puntos_cluster_, max_puntos_cluster_, umbral_distancia_)
-    # print("Clusters negativos")
-    # visualizar_clusters(datos_negativos, min_puntos_cluster_, max_puntos_cluster_, umbral_distancia_)
+    # ~Descomentar~
+    #print("Clusters positivos")
+    #visualizar_clusters(datos_positivos, min_puntos_cluster_, max_puntos_cluster_, umbral_distancia_)
+    #print("Clusters negativos")
+    #visualizar_clusters(datos_negativos, min_puntos_cluster_, max_puntos_cluster_, umbral_distancia_)
 
     # <Creo los ficheros JSON de los clusters>
     
